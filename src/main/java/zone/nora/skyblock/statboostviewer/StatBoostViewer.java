@@ -47,7 +47,7 @@ public class StatBoostViewer {
     @EventHandler
     public void onPostInit(FMLPostInitializationEvent e) {
         String c = null;
-        if (ForgeVersion.buildVersion != 2318) {
+        if (!ForgeVersion.getVersion().contains("2318")) {
             JOptionPane.showMessageDialog(new JFrame(), "StatBoostViewer will not work on your Forge version.\nPlease download the LATEST 1.8.9 Forge version.", "StatBoostViewer", JOptionPane.ERROR_MESSAGE);
             try {
                 if (Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
