@@ -24,14 +24,54 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraftforge.common.ForgeVersion;
 import net.minecraftforge.fml.client.config.GuiUtils;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod.EventHandler;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 
+import javax.swing.*;
+import java.awt.*;
+import java.net.URI;
 import java.util.List;
 
-@Mod(modid = "StatBoostViewer", name = "StatBoostViewer", version = "1.0")
+@Mod(modid = "StatBoostViewer", name = "StatBoostViewer", version = "1.0.1")
 public class StatBoostViewer {
     private static final Minecraft mc = Minecraft.getMinecraft();
+
+    @EventHandler
+    public void onPostInit(FMLPostInitializationEvent e) {
+        String c = null;
+        if (ForgeVersion.buildVersion != 2318) {
+            JOptionPane.showMessageDialog(new JFrame(), "StatBoostViewer will not work on your Forge version.\nPlease download the LATEST 1.8.9 Forge version.", "StatBoostViewer", JOptionPane.ERROR_MESSAGE);
+            try {
+                if (Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                    Desktop.getDesktop().browse(new URI("http://files.minecraftforge.net/maven/net/minecraftforge/forge/index_1.8.9.html"));
+                }
+            } catch (Exception ignored) { }
+            c = "Unsupported MinecraftForge Version. Update to the Latest 1.8.9 Forge Version!";
+        } else {
+            try {
+                // this is obviously super easy to bypass. it is just to deter, not to prevent.
+                // if i *really* cared, i would obfuscate the mod and definitely not open source it.
+                CloseableHttpClient httpClient = HttpClients.createDefault();
+                HttpUriRequest req = new HttpGet(new URI("https://gist.githubusercontent.com/mew/6686a939151c8fb3be34a54392646189/raw"));
+                req.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 5.1; rv:19.0) Gecko/20100101 Firefox/19.0");
+                String s = EntityUtils.toString(httpClient.execute(req).getEntity());
+                if (s.contains(mc.getSession().getPlayerID().replace("-", ""))) {
+                    c = "You are blacklisted from using StatBoostViewer.";
+                }
+            } catch (Exception ignored) { }
+        }
+        if (c != null) {
+            throw new RuntimeException(c);
+        }
+    }
 
     public static void renderToolTip(ItemStack stack, int x, int y) {
         List<String> list = stack.getTooltip(mc.thePlayer, mc.gameSettings.advancedItemTooltips);
