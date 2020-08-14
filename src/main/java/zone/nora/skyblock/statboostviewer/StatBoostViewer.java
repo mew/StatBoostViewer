@@ -31,7 +31,7 @@ import java.util.List;
 
 @Mod(modid = "StatBoostViewer", name = "StatBoostViewer", version = "1.0")
 public class StatBoostViewer {
-    public static Minecraft mc = Minecraft.getMinecraft();
+    private static final Minecraft mc = Minecraft.getMinecraft();
 
     public static void renderToolTip(ItemStack stack, int x, int y) {
         List<String> list = stack.getTooltip(mc.thePlayer, mc.gameSettings.advancedItemTooltips);

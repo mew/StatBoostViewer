@@ -34,7 +34,7 @@ public class GuiScreenTransformer implements ITransformer {
     public void transform(ClassNode classNode, String name) {
         for (MethodNode methodNode : classNode.methods) {
             String methodName = FMLDeobfuscatingRemapper.INSTANCE.mapMethodName(classNode.name, methodNode.name, methodNode.desc);
-            if (methodName.equals("renderToolTip")) {
+            if (methodName.equals("renderToolTip") || methodName.equals("func_146285_a")) {
                 methodNode.instructions.clear();
                 methodNode.instructions.add(insnList());
                 ClassTransformer.LOGGER.info("Overwrote renderToolTip.");
