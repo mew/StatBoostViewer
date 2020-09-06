@@ -19,15 +19,16 @@
 package zone.nora.skyblock.statboostviewer.asm;
 
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
-import zone.nora.skyblock.statboostviewer.asm.transformer.ClassTransformer;
+import zone.nora.skyblock.statboostviewer.asm.transformer.GuiScreenTransformer;
 
 import java.util.Map;
 
+@IFMLLoadingPlugin.SortingIndex(-1)
 @IFMLLoadingPlugin.MCVersion("1.8.9")
 public class FMLLoadingPlugin implements IFMLLoadingPlugin {
     @Override
     public String[] getASMTransformerClass() {
-        return new String[] { ClassTransformer.class.getName() };
+        return new String[] { GuiScreenTransformer.class.getName() };
     }
 
     @Override

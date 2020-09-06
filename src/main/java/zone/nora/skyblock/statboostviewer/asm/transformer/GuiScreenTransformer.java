@@ -16,30 +16,43 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package zone.nora.skyblock.statboostviewer.asm.transformer.impl;
+package zone.nora.skyblock.statboostviewer.asm.transformer;
 
+import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraftforge.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
-import zone.nora.skyblock.statboostviewer.asm.transformer.ClassTransformer;
-import zone.nora.skyblock.statboostviewer.asm.transformer.ITransformer;
 
-public class GuiScreenTransformer implements ITransformer {
+public class GuiScreenTransformer implements IClassTransformer {
     @Override
-    public String[] getClassName() {
-        return new String[] { "net.minecraft.client.gui.GuiScreen" };
-    }
+    public byte[] transform(String name, String transformedName, byte[] basicClass) {
+        if (basicClass == null) return null;
 
-    @Override
-    public void transform(ClassNode classNode, String name) {
-        for (MethodNode methodNode : classNode.methods) {
-            String methodName = FMLDeobfuscatingRemapper.INSTANCE.mapMethodName(classNode.name, methodNode.name, methodNode.desc);
-            if (methodName.equals("renderToolTip") || methodName.equals("func_146285_a")) {
-                methodNode.instructions.clear();
-                methodNode.instructions.add(insnList());
-                ClassTransformer.LOGGER.info("Overwrote renderToolTip.");
+        if (transformedName.equals("net.minecraft.client.gui.GuiScreen")) {
+            ClassReader reader = new ClassReader(basicClass);
+            ClassNode node = new ClassNode();
+            reader.accept(node, ClassReader.EXPAND_FRAMES);
+
+            for (MethodNode methodNode : node.methods) {
+                String methodName = FMLDeobfuscatingRemapper.INSTANCE.mapMethodName(node.name, methodNode.name, methodNode.desc);
+                if (methodName.equals("renderToolTip") || methodName.equals("func_146285_a")) {
+                    methodNode.instructions.clear();
+                    methodNode.instructions.add(insnList());
+                }
             }
+
+            ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+            try {
+                node.accept(writer);
+            } catch (Throwable t) {
+                t.printStackTrace();
+            }
+            return writer.toByteArray();
         }
+
+        return basicClass;
     }
 
     private InsnList insnList() {
