@@ -19,16 +19,15 @@
 package zone.nora.skyblock.statboostviewer;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.common.ForgeVersion;
-import net.minecraftforge.fml.client.config.GuiUtils;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -38,12 +37,9 @@ import org.apache.http.util.EntityUtils;
 import javax.swing.*;
 import java.awt.*;
 import java.net.URI;
-import java.util.List;
 
-@Mod(modid = "StatBoostViewer", name = "StatBoostViewer", version = "1.0.1")
+@Mod(modid = "StatBoostViewer", name = "StatBoostViewer", version = "1.2")
 public class StatBoostViewer {
-    private static final Minecraft mc = Minecraft.getMinecraft();
-
     @EventHandler
     public void onPostInit(FMLPostInitializationEvent e) {
         String c = null;
@@ -63,7 +59,7 @@ public class StatBoostViewer {
                 HttpUriRequest req = new HttpGet(new URI("https://gist.githubusercontent.com/mew/6686a939151c8fb3be34a54392646189/raw"));
                 req.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 5.1; rv:19.0) Gecko/20100101 Firefox/19.0");
                 String s = EntityUtils.toString(httpClient.execute(req).getEntity());
-                if (s.contains(mc.getSession().getPlayerID().replace("-", ""))) {
+                if (s.contains(Minecraft.getMinecraft().getSession().getPlayerID().replace("-", ""))) {
                     c = "You are blacklisted from using StatBoostViewer.";
                 }
             } catch (Exception ignored) { }
@@ -71,18 +67,12 @@ public class StatBoostViewer {
         if (c != null) {
             throw new RuntimeException(c);
         }
+        MinecraftForge.EVENT_BUS.register(this);
     }
 
-    public static void renderToolTip(ItemStack stack, int x, int y) {
-        List<String> list = stack.getTooltip(mc.thePlayer, mc.gameSettings.advancedItemTooltips);
-
-        for (int i = 0; i < list.size(); ++i) {
-            if (i == 0) {
-                list.set(i, stack.getRarity().rarityColor + list.get(i));
-            } else {
-                list.set(i, EnumChatFormatting.GRAY + list.get(i));
-            }
-        }
+    @SubscribeEvent
+    public void onToolTip(ItemTooltipEvent event) {
+        ItemStack stack = event.itemStack;
 
         NBTTagCompound nbt = stack.serializeNBT();
         if (nbt.hasKey("tag")) {
@@ -93,21 +83,17 @@ public class StatBoostViewer {
                 boolean flag2 = extraAttributes.hasKey("item_tier", 99);
 
                 if (flag || flag2) {
-                    list.add("");
+                    event.toolTip.add("");
                     if (flag) {
                         int i = extraAttributes.getInteger("baseStatBoostPercentage");
-                        list.add("\u00a76Stat Boost Percentage: " + i + "/50");
+                        event.toolTip.add("\u00a76Stat Boost Percentage: " + i + "/50");
                     }
                     if (flag2) {
                         int i = extraAttributes.getInteger("item_tier");
-                        list.add("\u00a76Found on Floor " + i);
+                        event.toolTip.add("\u00a76Found on Floor " + i);
                     }
                 }
             }
         }
-
-        FontRenderer font = stack.getItem().getFontRenderer(stack);
-        ScaledResolution scaledResolution = new ScaledResolution(mc);
-        GuiUtils.drawHoveringText(list, x, y, scaledResolution.getScaledWidth(), scaledResolution.getScaledHeight(), -1, (font == null ? mc.fontRendererObj : font));
     }
 }
